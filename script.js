@@ -15,35 +15,84 @@ const countOfEnemy = 10;
 const countOfPotion = 10;
 const countOfSword = 2;
 let enemys = [];
+let potions = [];
+let swords = [];
 
-const person = {
-    x: 0,
-    y: 0,
-    health: 100,
-    attack: 10
-};
+let person;
 
 let map = Array(mapHeight).fill().map(() => Array(mapWidth).fill().map(() => 1));
 
 generateHallways()
 generateRooms()
+generatePerson()
+generateItem()
 generateEnemy()
 
-console.log(map)
+// console.log(map)
 
+function generateItem() {
+
+    for (let i = 0; i < countOfPotion; i++) {
+        let position = randomPosition();
+        potions.push({
+            x: position.x,
+            y: position.y,
+            type: "health"
+        });
+    }
+
+    for (let i = 0; i < countOfSword; i++) {
+        let position = randomPosition();
+        swords.push({
+            x: position.x,
+            y: position.y,
+            type: "attach"
+        });
+    }
+
+
+    // console.log(person);
+
+}
+
+
+function generatePerson() {
+
+    let x, y;
+    do {
+        x = Math.floor(Math.random() * (mapWidth - 2)) + 1;
+        y = Math.floor(Math.random() * (mapHeight - 2)) + 1;
+    } while (map[y][x] !== 0);
+
+        person = {
+            x: x,
+            y: y,
+            health: 100,
+            attack: 10
+        };
+
+    console.log(person);
+
+}
+
+function randomPosition(){
+    let x, y;
+    do {
+        x = Math.floor(Math.random() * (mapWidth - 2)) + 1;
+        y = Math.floor(Math.random() * (mapHeight - 2)) + 1;
+    } while (map[y][x] !== 0 || (x === person.x && y === person.y));
+
+    return {x, y};
+}
 
 function generateEnemy() {
 
     for (let i = 0; i < countOfEnemy; i++) {
-        let x, y;
-        do {
-            x = Math.floor(Math.random() * (mapWidth - 2)) + 1;
-            y = Math.floor(Math.random() * (mapHeight - 2)) + 1;
-        } while (map[y][x] !== 0 || (x === person.x && y === person.y));
 
+        let position = randomPosition();
         enemys.push({
-            x: x,
-            y: y,
+            x: position.x,
+            y: position.y,
             health: 30,
             attack: 5,
         });
@@ -54,6 +103,19 @@ function generateEnemy() {
 
 }
 
+function isCellFree(x, y) {
+    if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) return false;
+    if (map[y][x] === 1) return false;
+
+    // Проверка на монстров
+    for (let enemy of enemys) {
+        if (enemy.x === x && enemy.y === y) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
 function generateHallways() {
@@ -171,6 +233,43 @@ function drawMap() {
     }
 }
 
+function drawSwords() {
+    let img = textures.sword;
+    swords.forEach(sword => {
+        ctx.drawImage(
+            img,
+            sword.x * cellSize,
+            sword.y * cellSize,
+            cellSize,
+            cellSize
+        )
+    })
+}
+
+function drawPotions() {
+    let img = textures.potion;
+    potions.forEach(potion => {
+        ctx.drawImage(
+            img,
+            potion.x * cellSize,
+            potion.y * cellSize,
+            cellSize,
+            cellSize
+        )
+    })
+}
+
+function drawPerson() {
+    let img = textures.person;
+    ctx.drawImage(
+        img,
+        person.x * cellSize,
+        person.y * cellSize,
+        cellSize,
+        cellSize
+    )
+}
+
 //Отрисовка монстров
 function drawEnemys() {
     let img = textures.enemy;
@@ -191,6 +290,9 @@ function gameLoop() {
 
     // Отрисовка
     drawMap();
+    drawSwords();
+    drawPotions();
+    drawPerson()
     drawEnemys();
     // drawPlayer();
 
@@ -239,6 +341,44 @@ Promise.all([
 ]).then(() => {
     // renderMap(game.mapOfGame);
     gameLoop();
+
+
+})
+
+
+document.addEventListener('keydown', (e) => {
+    let newX = person.x;
+    let newY = person.y;
+
+    switch (e.key){
+        case "w":
+            newY--;
+            break;
+        case "s":
+            newY++;
+            break;
+        case "a":
+            newX--;
+            break;
+        case "d":
+            newX++;
+            break;
+    }
+
+    if(isCellFree(newX,newY)){
+        person.x = newX;
+        person.y = newY;
+    }
+
+    let enemyIndex = -1;
+    for (let i = 0; i < enemys; i++) {
+        if(enemys[i].x === newX && enemys[i].y === newY) {
+            enemyIndex = i;
+            break;
+        }
+    }
+
+
 
 
 })
