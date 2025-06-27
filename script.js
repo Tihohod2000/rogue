@@ -2,11 +2,23 @@ class Game {
     mapWidth = 40;
     mapHeight = 24;
     mapOfGame = Array(this.mapHeight).fill().map(() => Array(this.mapWidth).fill().map(() => ({
-        structure: "Wall"
+            structure: "Wall",
+            enemy: false,
+            person:false,
+            item: false,
+            potion: false,
+            sword: false,
     })
     ));
 
+    person;
+    positionOfPerson
+
+    arrPositionOfEnemy = [];
+
     countOfEnemy = 10;
+    countOfPotion = 10;
+    countOfSword = 2;
 
     SizeOfRoom = [3, 8];
 
@@ -16,9 +28,6 @@ class Game {
     arrOfHallways = [];
     arrOfRooms = [];
 
-    countSword = 2;
-    countPotion = 10;
-
     CELL_SIZE_X = 1024/40;
     CELL_SIZE_Y = 640/24;
 
@@ -27,6 +36,93 @@ class Game {
         this.generateRandomMap();
 
         //дальше нужно рандомно расположить врагов, мечи, зелья и главного героя
+
+        this.generateEnemy()
+        this.generateItem()
+        this.generatePerson()
+    }
+
+    generatePerson(){
+        //вынести переменную в отдельную функцию
+        let floorOfMap = this.mapOfGame.map(
+            row => row.filter(
+                cell => cell.structure !== "Wall" && cell.item === false)
+        )
+            .flat();
+        let randomCell =
+            Math.floor(Math.random() * (floorOfMap.length-1));
+        floorOfMap[randomCell].person = true;
+        floorOfMap[randomCell].item = true;
+        this.person = floorOfMap[randomCell];
+        this.positionOfPerson = this.findObjectIndexInMatrix(this.mapOfGame, this.person);
+        // console.log(this.positionOfPerson);
+    }
+
+    generateEnemy(){
+        let floorOfMap = this.mapOfGame.map(
+            row => row.filter(
+                cell => cell.structure !== "Wall" && cell.item === false)
+        )
+            .flat();
+        console.log(floorOfMap);
+        console.log(this.mapOfGame);
+        for (let i = 0; i < this.countOfEnemy; i++) {
+
+            let randomCell =
+                Math.floor(Math.random() * (floorOfMap.length-1));
+
+            if (floorOfMap[randomCell].item === false) {
+                floorOfMap[randomCell].enemy = true;
+                floorOfMap[randomCell].item = true;
+                this.arrPositionOfEnemy.push(this.findObjectIndexInMatrix(this.mapOfGame, floorOfMap[randomCell]));
+                // console.log(this.arrPositionOfEnemy);
+            }
+            else{
+                i--;
+            }
+
+
+        }
+
+    }
+
+    generateItem(){
+        let floorOfMap = this.mapOfGame.map(
+            row => row.filter(
+                cell => cell.structure !== "Wall" && cell.item === false)
+        )
+            .flat();
+        // console.log(floorOfMap);
+        // console.log(this.mapOfGame);
+
+        //Создаём зелья здоровья
+        for (let i = 0; i < this.countOfPotion; i++) {
+
+            let randomCell =
+                Math.floor(Math.random() * (floorOfMap.length-1));
+
+            if (floorOfMap[randomCell].item === false) {
+                floorOfMap[randomCell].potion = true;
+                floorOfMap[randomCell].item = true;
+            }
+            else{
+                i--;
+            }
+        }
+
+        for (let i = 0; i < this.countOfSword; i++) {
+
+            let randomCell =
+                Math.floor(Math.random() * (floorOfMap.length-1));
+
+            if (floorOfMap[randomCell].item === false) {
+                floorOfMap[randomCell].sword = true;
+                floorOfMap[randomCell].item = true;
+            }
+            else{
+                i--;
+            }
+        }
 
     }
 
@@ -111,10 +207,7 @@ class Game {
             if (this.mapOfGame[y][0].structure === "floorOfHallwaysHorizontally") {
                 i--;
             } else if (y < this.mapOfGame.length) {
-                this.mapOfGame[y].fill(
-                    {
-                        structure: "floorOfHallwaysHorizontally"
-                    });
+                this.mapOfGame[y].map(row => row.structure = "floorOfHallwaysHorizontally");
             } else {
                 i--;
             }
@@ -138,6 +231,44 @@ class Game {
         }
     }
 
+    findObjectIndexInMatrix(matrix, target) {
+        for (let i = 0; i < matrix.length; i++) {
+            const j = matrix[i].indexOf(target);
+            if (j !== -1) {
+                return { y: i, x: j };
+            }
+        }
+        return null;
+    }
+
+    move({y = 0, x = 0}){
+
+    }
+
+    movement(key) {
+        //Тут будет перемещение персонажа в указанном направлении
+        switch (key) {
+            case "w":
+                this.move({y: -1 })
+                console.log("wwww");
+                break;
+            case "s":
+                this.move({y: 1 })
+                console.log("sss");
+                break;
+            case "a":
+                this.move({x: -1 })
+                console.log("aaa");
+                break;
+            case "d":
+                this.move({x: 1 })
+                console.log("dddd");
+                break;
+        }
+        //После перемещения персонажа, противники должно тоже переместиться на одну клетку
+
+    }
+
 }
 
 function renderMap(matrix){
@@ -153,7 +284,17 @@ function renderMap(matrix){
             let img;
             if(cell.structure === "Wall"){
                 img = textures.wall;
-            }else{
+            }
+            else if(cell.enemy === true){
+                img = textures.enemy;
+            }else if(cell.potion === true){
+                img = textures.potion;
+            }else if(cell.sword === true){
+                img = textures.sword;
+            }else if(cell.person === true){
+                img = textures.person;
+            }
+            else{
                 img = textures.floor;
             }
             //клетка
@@ -183,16 +324,36 @@ game.init();
 // Объект для хранения загруженных изображений
 const textures = {
     floor: new Image(),
-    wall: new Image()
+    enemy: new Image(),
+    wall: new Image(),
+    sword: new Image(),
+    potion: new Image(),
+    person: new Image(),
 };
 
-textures.wall.src = 'images/tile-W.png';
 textures.floor.src = 'images/tile-.png';
+textures.enemy.src = 'images/tile-E.png';
+textures.wall.src = 'images/tile-W.png';
+textures.sword.src = 'images/tile-SW.png';
+textures.potion.src = 'images/tile-HP.png';
+textures.person.src = 'images/tile-P.png';
 Promise.all([
-    new Promise(resolve => {textures.wall.onload = resolve;}),
     new Promise(resolve => {textures.floor.onload = resolve;}),
+    new Promise(resolve => {textures.enemy.onload = resolve;}),
+    new Promise(resolve => {textures.wall.onload = resolve;}),
+    new Promise(resolve => {textures.sword.onload = resolve;}),
+    new Promise(resolve => {textures.potion.onload = resolve;}),
+    new Promise(resolve => {textures.person.onload = resolve;}),
 ]).then(() => {
     renderMap(game.mapOfGame);
 })
+
+
+document.addEventListener('keydown', function(event) {
+        // console.log(`Нажат ${event.key}`);
+        game.movement(event.key);
+        renderMap(game.mapOfGame);
+        
+});
 
 // console.log(game.mapOfGame);
