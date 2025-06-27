@@ -1,7 +1,10 @@
 class Game {
     mapWidth = 40;
     mapHeight = 24;
-    mapOfGame = Array(this.mapHeight).fill().map(() => Array(this.mapWidth).fill("Wall"));
+    mapOfGame = Array(this.mapHeight).fill().map(() => Array(this.mapWidth).fill().map(() => ({
+        structure: "Wall"
+    })
+    ));
 
     countOfEnemy = 10;
 
@@ -22,6 +25,8 @@ class Game {
 
     init() {
         this.generateRandomMap();
+
+        //дальше нужно рандомно расположить врагов, мечи, зелья и главного героя
 
     }
 
@@ -62,13 +67,13 @@ class Game {
 
             let roomReachability = false;
 
-            console.log(startX, startY, randomSizeWidthOfRooms);
+            // console.log(startX, startY, randomSizeWidthOfRooms);
 
             exitLoopPoint: for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
                 for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
                     if (
-                        (y+1 >= this.mapOfGame.length || this.mapOfGame[y+1][x] !== "Wall") ||
-                        (x+1 >= this.mapOfGame[y].length || this.mapOfGame[y][x+1] !== "Wall")
+                        (y+1 >= this.mapOfGame.length || this.mapOfGame[y+1][x].structure !== "Wall") ||
+                        (x+1 >= this.mapOfGame[y].length || this.mapOfGame[y][x+1].structure !== "Wall")
                     ) {
                         roomReachability = true;
                         break exitLoopPoint;
@@ -86,7 +91,7 @@ class Game {
             //Создание комнаты
             for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
                 for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
-                    this.mapOfGame[y][x] = "floorOfRoom";
+                    this.mapOfGame[y][x].structure = "floorOfRoom";
                 }
             }
         }
@@ -101,11 +106,15 @@ class Game {
 
         //Добавление горизонтальных коридоров
         for (let i = 0; i < randomCountOfHallwaysHorizontally; i++) {
-            let y = Math.floor(Math.random() * (this.mapHeight) + 1);
-            if (this.mapOfGame[y][0] === "floorOfHallwaysHorizontally") {
+            let y = Math.floor(Math.random() * (this.mapHeight-1) + 1);
+            // console.log(`y: ${y}`)
+            if (this.mapOfGame[y][0].structure === "floorOfHallwaysHorizontally") {
                 i--;
-            } else if (y <= this.mapOfGame.length) {
-                this.mapOfGame[y].fill("floorOfHallwaysHorizontally");
+            } else if (y < this.mapOfGame.length) {
+                this.mapOfGame[y].fill(
+                    {
+                        structure: "floorOfHallwaysHorizontally"
+                    });
             } else {
                 i--;
             }
@@ -113,11 +122,14 @@ class Game {
 
         //Добавление вертикальных коридоров
         for (let i = 0; i < randomCountOfHallwaysVertically; i++) {
-            let x = Math.floor(Math.random() * (this.mapWidth) + 1);
-            if (this.mapOfGame[0][x] === "floorOfHallwaysVertically") {
+            let x = Math.floor(Math.random() * (this.mapWidth-1) + 1);
+            let structure = this.mapOfGame[0][x];
+            // console.log(structure.structure)
+            // console.log(structure)
+            if (structure.structure === "floorOfHallwaysVertically") {
                 i--;
-            } else if (x <= this.mapOfGame[0].length) {
-                this.mapOfGame.map((row) => row[x] = "floorOfHallwaysVertically")
+            } else if (x < this.mapOfGame[0].length) {
+                this.mapOfGame.map((row) => row[x].structure = "floorOfHallwaysVertically")
             } else {
                 i--;
             }
@@ -139,7 +151,7 @@ function renderMap(matrix){
     matrix.forEach((row, y) => {
         row.forEach((cell, x) => {
             let img;
-            if(cell === "Wall"){
+            if(cell.structure === "Wall"){
                 img = textures.wall;
             }else{
                 img = textures.floor;
