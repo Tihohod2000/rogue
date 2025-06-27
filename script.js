@@ -284,6 +284,53 @@ function drawEnemys() {
     })
 }
 
+
+function  moveEnemys() {
+    enemys.forEach(enemy => {
+        const directions = [
+            { dx: 0, dy: -1 }, // вверх
+            { dx: 1, dy: 0 },  // вправо
+            { dx: 0, dy: 1 },  // вниз
+            { dx: -1, dy: 0 }  // влево
+        ];
+
+
+        //Движение противников
+        let bestDirections = null;
+        let bestDistance = Infinity;
+
+        for(let dir of directions) {
+            const newX = enemy.x + dir.dx;
+            const newY = enemy.y + dir.dy;
+
+            if(isCellFree(newX, newY) || (newX === person.x && newY === person.y)) {
+                const dist = Math.pow(newX - person.x, 2) + Math.pow(newY - person.y, 2)
+                if(dist < bestDistance) {
+                    bestDistance = dist
+                    bestDirections = dir
+                }
+            }
+
+            if(bestDirections){
+                const nx = enemy.x + bestDirections.dx;
+                const ny = enemy.y + bestDirections.dy;
+
+                if (nx === person.x && ny === person.y) {
+                    // player.health -= monster.attack;
+                    // console.log(`Игрок атакован! Здоровье: ${player.health}`);
+                } else if (isCellFree(nx, ny)) {
+                    enemy.x = nx;
+                    enemy.y = ny;
+                }
+
+            }
+
+        }
+    })
+
+    enemys.filter(e => e.health > 0);
+}
+
 function gameLoop() {
     // Очистка экрана
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -365,10 +412,7 @@ document.addEventListener('keydown', (e) => {
             break;
     }
 
-    if(isCellFree(newX,newY)){
-        person.x = newX;
-        person.y = newY;
-    }
+
 
     let enemyIndex = -1;
     for (let i = 0; i < enemys; i++) {
@@ -376,6 +420,16 @@ document.addEventListener('keydown', (e) => {
             enemyIndex = i;
             break;
         }
+    }
+
+    if(enemyIndex !== -1){
+        enemys[enemyIndex].health -= person.attack;
+
+    }else if(isCellFree(newX,newY)){
+        person.x = newX;
+        person.y = newY;
+
+        moveEnemys()
     }
 
 
