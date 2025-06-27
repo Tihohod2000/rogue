@@ -1,7 +1,7 @@
 class Game {
     mapWidth = 40;
     mapHeight = 24;
-    mapOfGame = Array(this.mapHeight).fill().map(() => Array(this.mapWidth).fill(null));
+    mapOfGame = Array(this.mapHeight).fill().map(() => Array(this.mapWidth).fill("Wall"));
 
     countOfEnemy = 10;
 
@@ -15,6 +15,9 @@ class Game {
 
     countSword = 2;
     countPotion = 10;
+
+    CELL_SIZE_X = 1024/40;
+    CELL_SIZE_Y = 640/24;
 
 
     init() {
@@ -55,6 +58,32 @@ class Game {
                 startY--;
             }
 
+            //Сделать проверку что комната будет достяжимой
+
+            let roomReachability = false;
+
+            console.log(startX, startY, randomSizeWidthOfRooms);
+
+            exitLoopPoint: for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
+                for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
+                    if (
+                        (y+1 >= this.mapOfGame.length || this.mapOfGame[y+1][x] !== "Wall") ||
+                        (x+1 >= this.mapOfGame[y].length || this.mapOfGame[y][x+1] !== "Wall")
+                    ) {
+                        roomReachability = true;
+                        break exitLoopPoint;
+                    }
+                }
+            }
+
+
+            //Если комната не прошла проверку
+            if(!roomReachability){
+                i--;
+                continue;
+            }
+
+            //Создание комнаты
             for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
                 for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
                     this.mapOfGame[y][x] = "floorOfRoom";
@@ -102,15 +131,15 @@ class Game {
 function renderMap(matrix){
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const cellSizeX = 1024/40;
-    const cellSizeY = 640/24;
+    // const cellSizeX = 1024/40;
+    // const cellSizeY = 640/24;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     matrix.forEach((row, y) => {
         row.forEach((cell, x) => {
             let img;
-            if(cell == null){
+            if(cell === "Wall"){
                 img = textures.wall;
             }else{
                 img = textures.floor;
@@ -118,19 +147,19 @@ function renderMap(matrix){
             //клетка
             ctx.drawImage(
                 img,
-                x * cellSizeX,
-                y * cellSizeY,
-                cellSizeX,
-                cellSizeY
+                x * game.CELL_SIZE_X,
+                y * game.CELL_SIZE_Y,
+                game.CELL_SIZE_X,
+                game.CELL_SIZE_Y
             );
 
             //границы
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.strokeRect(
-                x * cellSizeX,
-                y * cellSizeY,
-                cellSizeX,
-                cellSizeY
+                x * game.CELL_SIZE_X,
+                y * game.CELL_SIZE_Y,
+                game.CELL_SIZE_X,
+                game.CELL_SIZE_Y
             );
 
         });
