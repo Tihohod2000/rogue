@@ -1,322 +1,207 @@
-class Game {
-    mapWidth = 40;
-    mapHeight = 24;
-    mapOfGame = Array(this.mapHeight).fill().map(() => Array(this.mapWidth).fill().map(() => ({
-            structure: "Wall",
-            enemy: false,
-            person: false,
-            item: false,
-            potion: false,
-            sword: false,
-        })
-    ));
+const canvas = document.getElementById("gameCanvas")
+const ctx = canvas.getContext("2d");
 
-    person;
-    positionOfPerson
+const mapWidth = 40;
+const mapHeight = 24;
 
-    arrPositionOfEnemy = [];
+const cellSize = 20;
 
-    countOfEnemy = 10;
-    countOfPotion = 10;
-    countOfSword = 2;
+const countOfRooms = [5, 10];
+const SizeOfRoom = [3, 8];
 
-    SizeOfRoom = [3, 8];
+const countOfHallways = [3, 5];
 
-    countOfRooms = [5, 10];
-    countOfHallways = [3, 5];
+const countOfEnemy = 10;
+const countOfPotion = 10;
+const countOfSword = 2;
+let enemys = [];
 
-    arrOfHallways = [];
-    arrOfRooms = [];
+const person = {
+    x: 0,
+    y: 0,
+    health: 100,
+    attack: 10
+};
 
-    CELL_SIZE_X = 1024 / 40;
-    CELL_SIZE_Y = 640 / 24;
+let map = Array(mapHeight).fill().map(() => Array(mapWidth).fill().map(() => 1));
+
+generateHallways()
+generateRooms()
+generateEnemy()
+
+console.log(map)
 
 
-    init() {
-        this.generateRandomMap();
+function generateEnemy() {
 
-        //дальше нужно рандомно расположить врагов, мечи, зелья и главного героя
+    for (let i = 0; i < countOfEnemy; i++) {
+        let x, y;
+        do {
+            x = Math.floor(Math.random() * (mapWidth - 2)) + 1;
+            y = Math.floor(Math.random() * (mapHeight - 2)) + 1;
+        } while (map[y][x] !== 0 || (x === person.x && y === person.y));
 
-        this.generateEnemy()
-        this.generateItem()
-        this.generatePerson()
+        enemys.push({
+            x: x,
+            y: y,
+            health: 30,
+            attack: 5,
+        });
+
+
+    }
+    console.log(enemys);
+
+}
+
+
+
+function generateHallways() {
+    let randomCountOfHallwaysHorizontally =
+        Math.floor(Math.random() * (countOfHallways[1] - countOfHallways[0] + 1)) + 3;
+    let randomCountOfHallwaysVertically =
+        Math.floor(Math.random() * (countOfHallways[1] - countOfHallways[0] + 1)) + 3;
+
+    //Добавление горизонтальных коридоров
+    for (let i = 0; i < randomCountOfHallwaysHorizontally; i++) {
+        let y = Math.floor(Math.random() * (mapHeight - 1) + 1);
+        // console.log(`y: ${y}`)
+        if (map[y][0] === 0) {
+            i--;
+        } else if (y < map.length) {
+            map[y].fill(0);
+        } else {
+            i--;
+        }
     }
 
-    generatePerson() {
-        //вынести переменную в отдельную функцию
-        let floorOfMap = this.mapOfGame.map(
-            row => row.filter(
-                cell => cell.structure !== "Wall" && cell.item === false)
-        )
-            .flat();
-        let randomCell =
-            Math.floor(Math.random() * (floorOfMap.length - 1));
-        floorOfMap[randomCell].person = true;
-        floorOfMap[randomCell].item = true;
-        this.person = floorOfMap[randomCell];
-        this.positionOfPerson = this.findObjectIndexInMatrix(this.mapOfGame, this.person);
-        // console.log(this.positionOfPerson);
-    }
-
-    generateEnemy() {
-        let floorOfMap = this.mapOfGame.map(
-            row => row.filter(
-                cell => cell.structure !== "Wall" && cell.item === false)
-        )
-            .flat();
-        console.log(floorOfMap);
-        console.log(this.mapOfGame);
-        for (let i = 0; i < this.countOfEnemy; i++) {
-
-            let randomCell =
-                Math.floor(Math.random() * (floorOfMap.length - 1));
-
-            if (floorOfMap[randomCell].item === false) {
-                floorOfMap[randomCell].enemy = true;
-                floorOfMap[randomCell].item = true;
-                this.arrPositionOfEnemy.push(this.findObjectIndexInMatrix(this.mapOfGame, floorOfMap[randomCell]));
-                // console.log(this.arrPositionOfEnemy);
-            } else {
-                i--;
-            }
-
-
+    //Добавление вертикальных коридоров
+    for (let i = 0; i < randomCountOfHallwaysVertically; i++) {
+        let x = Math.floor(Math.random() * (mapWidth - 1) + 1);
+        let structure = map[0][x];
+        // console.log(structure.structure)
+        // console.log(structure)
+        if (structure === 0) {
+            i--;
+        } else if (x < map[0].length) {
+            map.map((row) => row[x] = 0)
+        } else {
+            i--;
         }
 
+
     }
+}
 
-    generateItem() {
-        let floorOfMap = this.mapOfGame.map(
-            row => row.filter(
-                cell => cell.structure !== "Wall" && cell.item === false)
-        )
-            .flat();
-        // console.log(floorOfMap);
-        // console.log(this.mapOfGame);
 
-        //Создаём зелья здоровья
-        for (let i = 0; i < this.countOfPotion; i++) {
+function generateRooms() {
+    let randomCountOfRooms =
+        Math.floor(Math.random() * (countOfRooms[1] - countOfRooms[0] + 1)) + 5;
 
-            let randomCell =
-                Math.floor(Math.random() * (floorOfMap.length - 1));
 
-            if (floorOfMap[randomCell].item === false) {
-                floorOfMap[randomCell].potion = true;
-                floorOfMap[randomCell].item = true;
-            } else {
-                i--;
-            }
+    for (let i = 0; i < randomCountOfRooms; i++) {
+        let startX = Math.floor(Math.random() * mapWidth + 1);
+        let startY = Math.floor(Math.random() * mapHeight + 1);
+
+        let randomSizeWidthOfRooms =
+            Math.floor(Math.random() * (SizeOfRoom[1] - SizeOfRoom[0] + 1)) + 3;
+        let randomSizeHeightOfRooms =
+            Math.floor(Math.random() * (SizeOfRoom[1] - SizeOfRoom[0] + 1)) + 3;
+
+        //Проверка что комната при создании не выйдет за карту
+        while (startX + randomSizeWidthOfRooms > map[0].length) {
+            startX--;
+        }
+        while (startY + randomSizeHeightOfRooms > map.length) {
+            startY--;
         }
 
-        for (let i = 0; i < this.countOfSword; i++) {
+        //Сделать проверку что комната будет достяжимой
+        let roomReachability = false;
 
-            let randomCell =
-                Math.floor(Math.random() * (floorOfMap.length - 1));
-
-            if (floorOfMap[randomCell].item === false) {
-                floorOfMap[randomCell].sword = true;
-                floorOfMap[randomCell].item = true;
-            } else {
-                i--;
-            }
-        }
-
-    }
-
-
-    generateRandomMap() {
-        //Добавление коридоров
-        this.generateHallways();
-
-        //Добавление комнат
-        this.generateRooms();
-        console.log(this.mapOfGame);
-
-    }
-
-    generateRooms() {
-        let randomCountOfRooms =
-            Math.floor(Math.random() * (this.countOfRooms[1] - this.countOfRooms[0] + 1)) + 5;
-
-
-        for (let i = 0; i < randomCountOfRooms; i++) {
-            let startX = Math.floor(Math.random() * this.mapWidth + 1);
-            let startY = Math.floor(Math.random() * this.mapHeight + 1);
-
-            let randomSizeWidthOfRooms =
-                Math.floor(Math.random() * (this.SizeOfRoom[1] - this.SizeOfRoom[0] + 1)) + 3;
-            let randomSizeHeightOfRooms =
-                Math.floor(Math.random() * (this.SizeOfRoom[1] - this.SizeOfRoom[0] + 1)) + 3;
-
-            //Проверка что комната при создании не выйдет за карту
-            while (startX + randomSizeWidthOfRooms > this.mapOfGame[0].length) {
-                startX--;
-            }
-            while (startY + randomSizeHeightOfRooms > this.mapOfGame.length) {
-                startY--;
-            }
-
-            //Сделать проверку что комната будет достяжимой
-
-            let roomReachability = false;
-
-            // console.log(startX, startY, randomSizeWidthOfRooms);
-
-            exitLoopPoint: for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
-                for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
-                    if (
-                        (y + 1 >= this.mapOfGame.length || this.mapOfGame[y + 1][x].structure !== "Wall") ||
-                        (x + 1 >= this.mapOfGame[y].length || this.mapOfGame[y][x + 1].structure !== "Wall")
-                    ) {
-                        roomReachability = true;
-                        break exitLoopPoint;
-                    }
-                }
-            }
-
-
-            //Если комната не прошла проверку
-            if (!roomReachability) {
-                i--;
-                continue;
-            }
-
-            //Создание комнаты
-            for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
-                for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
-                    this.mapOfGame[y][x].structure = "floorOfRoom";
+        exitLoopPoint: for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
+            for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
+                if (
+                    (y + 1 >= map.length || map[y + 1][x] !== 1) ||
+                    (x + 1 >= map[y].length || map[y][x + 1] !== 1)
+                ) {
+                    roomReachability = true;
+                    break exitLoopPoint;
                 }
             }
         }
 
-    }
+        //Если комната не прошла проверку
+        if (!roomReachability) {
+            i--;
+            continue;
+        }
 
-    generateHallways() {
-        let randomCountOfHallwaysHorizontally =
-            Math.floor(Math.random() * (this.countOfHallways[1] - this.countOfHallways[0] + 1)) + 3;
-        let randomCountOfHallwaysVertically =
-            Math.floor(Math.random() * (this.countOfHallways[1] - this.countOfHallways[0] + 1)) + 3;
-
-        //Добавление горизонтальных коридоров
-        for (let i = 0; i < randomCountOfHallwaysHorizontally; i++) {
-            let y = Math.floor(Math.random() * (this.mapHeight - 1) + 1);
-            // console.log(`y: ${y}`)
-            if (this.mapOfGame[y][0].structure === "floorOfHallwaysHorizontally") {
-                i--;
-            } else if (y < this.mapOfGame.length) {
-                this.mapOfGame[y].map(row => row.structure = "floorOfHallwaysHorizontally");
-            } else {
-                i--;
+        //Создание комнаты
+        for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
+            for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
+                map[y][x] = 0;
             }
         }
-
-        //Добавление вертикальных коридоров
-        for (let i = 0; i < randomCountOfHallwaysVertically; i++) {
-            let x = Math.floor(Math.random() * (this.mapWidth - 1) + 1);
-            let structure = this.mapOfGame[0][x];
-            // console.log(structure.structure)
-            // console.log(structure)
-            if (structure.structure === "floorOfHallwaysVertically") {
-                i--;
-            } else if (x < this.mapOfGame[0].length) {
-                this.mapOfGame.map((row) => row[x].structure = "floorOfHallwaysVertically")
-            } else {
-                i--;
-            }
-
-
-        }
-    }
-
-    findObjectIndexInMatrix(matrix, target) {
-        for (let i = 0; i < matrix.length; i++) {
-            const j = matrix[i].indexOf(target);
-            if (j !== -1) {
-                return {y: i, x: j};
-            }
-        }
-        return null;
-    }
-
-    move({y = 0, x = 0}) {
-
-    }
-
-    movement(key) {
-        //Тут будет перемещение персонажа в указанном направлении
-        switch (key) {
-            case "w":
-                this.move({y: -1})
-                console.log("wwww");
-                break;
-            case "s":
-                this.move({y: 1})
-                console.log("sss");
-                break;
-            case "a":
-                this.move({x: -1})
-                console.log("aaa");
-                break;
-            case "d":
-                this.move({x: 1})
-                console.log("dddd");
-                break;
-        }
-        //После перемещения персонажа, противники должно тоже переместиться на одну клетку
-
     }
 
 }
 
-function renderMap(matrix) {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    // const cellSizeX = 1024/40;
-    // const cellSizeY = 640/24;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    matrix.forEach((row, y) => {
-        row.forEach((cell, x) => {
+// Отрисовка карты
+function drawMap() {
+    for (let y = 0; y < mapHeight; y++) {
+        for (let x = 0; x < mapWidth; x++) {
             let img;
-            if (cell.structure === "Wall") {
+            if (map[y][x] === 1) {
                 img = textures.wall;
-            } else if (cell.enemy === true) {
-                img = textures.enemy;
-            } else if (cell.potion === true) {
-                img = textures.potion;
-            } else if (cell.sword === true) {
-                img = textures.sword;
-            } else if (cell.person === true) {
-                img = textures.person;
             } else {
                 img = textures.floor;
             }
-            //клетка
             ctx.drawImage(
                 img,
-                x * game.CELL_SIZE_X,
-                y * game.CELL_SIZE_Y,
-                game.CELL_SIZE_X,
-                game.CELL_SIZE_Y
-            );
-
-            //границы
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.strokeRect(
-                x * game.CELL_SIZE_X,
-                y * game.CELL_SIZE_Y,
-                game.CELL_SIZE_X,
-                game.CELL_SIZE_Y
-            );
-
-        });
-    });
+                x * cellSize,
+                y * cellSize,
+                cellSize,
+                cellSize
+            )
+            // ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        }
+    }
 }
 
-let game = new Game();
-game.init();
-// Объект для хранения загруженных изображений
+//Отрисовка монстров
+function drawEnemys() {
+    let img = textures.enemy;
+    enemys.forEach(enemy => {
+        ctx.drawImage(
+            img,
+            enemy.x * cellSize,
+            enemy.y * cellSize,
+            cellSize,
+            cellSize
+        )
+    })
+}
+
+function gameLoop() {
+    // Очистка экрана
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Отрисовка
+    drawMap();
+    drawEnemys();
+    // drawPlayer();
+
+    // Информация о здоровье
+    // ctx.fillStyle = '#FFF';
+    // ctx.font = '20px Arial';
+    // ctx.fillText(`Здоровье: ${player.health}`, 20, 30);
+
+    requestAnimationFrame(gameLoop);
+}
+
 const textures = {
     floor: new Image(),
     enemy: new Image(),
@@ -352,15 +237,8 @@ Promise.all([
         textures.person.onload = resolve;
     }),
 ]).then(() => {
-    renderMap(game.mapOfGame);
+    // renderMap(game.mapOfGame);
+    gameLoop();
+
+
 })
-
-
-document.addEventListener('keydown', function (event) {
-    // console.log(`Нажат ${event.key}`);
-    game.movement(event.key);
-    renderMap(game.mapOfGame);
-
-});
-
-// console.log(game.mapOfGame);
