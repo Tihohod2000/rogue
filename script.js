@@ -5,6 +5,8 @@ const mapWidth = 40;
 const mapHeight = 24;
 
 const cellSize = 20;
+const cellWidth = canvas.width / 40;
+const cellHeight = canvas.height / 24;
 
 const countOfRooms = [5, 10];
 const SizeOfRoom = [3, 8];
@@ -64,18 +66,18 @@ function generatePerson() {
         y = Math.floor(Math.random() * (mapHeight - 2)) + 1;
     } while (map[y][x] !== 0);
 
-        person = {
-            x: x,
-            y: y,
-            health: 100,
-            attack: 10
-        };
+    person = {
+        x: x,
+        y: y,
+        health: 100,
+        attack: 10
+    };
 
     console.log(person);
 
 }
 
-function randomPosition(){
+function randomPosition() {
     let x, y;
     do {
         x = Math.floor(Math.random() * (mapWidth - 2)) + 1;
@@ -171,10 +173,10 @@ function generateRooms() {
             Math.floor(Math.random() * (SizeOfRoom[1] - SizeOfRoom[0] + 1)) + 3;
 
         //Проверка что комната при создании не выйдет за карту
-        while (startX + randomSizeWidthOfRooms > map[0].length) {
+        while (startX + randomSizeWidthOfRooms > map[0].length-1) {
             startX--;
         }
-        while (startY + randomSizeHeightOfRooms > map.length) {
+        while (startY + randomSizeHeightOfRooms > map.length-1) {
             startY--;
         }
 
@@ -184,19 +186,19 @@ function generateRooms() {
         let border;
 
         exitLoopPoint: for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
-            if(y === startY || y === startY + randomSizeHeightOfRooms - 1) {
+            if (y === startY || y === startY + randomSizeHeightOfRooms - 1) {
                 border = 1;
-            }else{
+            } else {
                 border = startX + randomSizeWidthOfRooms - 1;
             }
 
-            for (let x = startX; x < (startX + randomSizeWidthOfRooms); x += border ) {
+            for (let x = startX; x < (startX + randomSizeWidthOfRooms - 1) ; x += border) {
 
                 if (
                     map[y + 1][x] !== 1 ||
-                    map[y][x+1] !== 1 ||
-                    map[y-1][x] !== 1 ||
-                    map[y][x-1] !== 1
+                    map[y][x + 1] !== 1 ||
+                    map[y - 1][x] !== 1 ||
+                    map[y][x - 1] !== 1
                 ) {
                     roomReachability = true;
                     break exitLoopPoint;
@@ -221,7 +223,6 @@ function generateRooms() {
 }
 
 
-
 // Отрисовка карты
 function drawMap() {
     for (let y = 0; y < mapHeight; y++) {
@@ -234,12 +235,11 @@ function drawMap() {
             }
             ctx.drawImage(
                 img,
-                x * cellSize,
-                y * cellSize,
-                cellSize,
-                cellSize
+                x * cellWidth,
+                y * cellHeight,
+                cellWidth,
+                cellHeight
             )
-            // ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
         }
     }
 }
@@ -249,10 +249,10 @@ function drawSwords() {
     swords.forEach(sword => {
         ctx.drawImage(
             img,
-            sword.x * cellSize,
-            sword.y * cellSize,
-            cellSize,
-            cellSize
+            sword.x * cellWidth,
+            sword.y * cellHeight,
+            cellWidth,
+            cellHeight
         )
     })
 }
@@ -262,10 +262,10 @@ function drawPotions() {
     potions.forEach(potion => {
         ctx.drawImage(
             img,
-            potion.x * cellSize,
-            potion.y * cellSize,
-            cellSize,
-            cellSize
+            potion.x * cellWidth,
+            potion.y * cellHeight,
+            cellWidth,
+            cellHeight
         )
     })
 }
@@ -274,10 +274,10 @@ function drawPerson() {
     let img = textures.person;
     ctx.drawImage(
         img,
-        person.x * cellSize,
-        person.y * cellSize,
-        cellSize,
-        cellSize
+        person.x * cellWidth,
+        person.y * cellHeight,
+        cellWidth,
+        cellHeight
     )
 }
 
@@ -287,36 +287,35 @@ function drawEnemys() {
     enemys.forEach(enemy => {
         ctx.drawImage(
             img,
-            enemy.x * cellSize,
-            enemy.y * cellSize,
-            cellSize,
-            cellSize
+            enemy.x * cellWidth,
+            enemy.y * cellHeight,
+            cellWidth,
+            cellHeight
         )
     })
 }
 
-function chekAttakRadiuse(from, to){
+function chekAttakRadiuse(from, to) {
     const radiuse = [
-        { dx: 0, dy: -1 }, // вверх
-        { dx: 1, dy: 0 },  // вправо
-        { dx: 0, dy: 1 },  // вниз
-        { dx: -1, dy: 0 },  // влево
-        { dx: 1, dy: -1 },  // вверх-вправо
-        { dx: 1, dy: 1 },  // вниз-вправо
-        { dx: -1, dy: 1 },  // вниз-влево
-        { dx: -1, dy: -1 }  // вверх-влево
+        {dx: 0, dy: -1}, // вверх
+        {dx: 1, dy: 0},  // вправо
+        {dx: 0, dy: 1},  // вниз
+        {dx: -1, dy: 0},  // влево
+        // { dx: 1, dy: -1 },  // вверх-вправо
+        // { dx: 1, dy: 1 },  // вниз-вправо
+        // { dx: -1, dy: 1 },  // вниз-влево
+        // { dx: -1, dy: -1 }  // вверх-влево
     ];
-
 
 
     let attack = false;
 
-    for(let rad of radiuse) {
+    for (let rad of radiuse) {
         const newX = from.x + rad.dx;
         const newY = from.y + rad.dy;
 
 
-        if(newX === to.x && newY === to.y) {
+        if (newX === to.x && newY === to.y) {
             attack = true;
         }
     }
@@ -324,24 +323,22 @@ function chekAttakRadiuse(from, to){
     return attack;
 }
 
-function  moveEnemys() {
+function moveEnemys() {
     enemys.forEach(enemy => {
         const directions = [
-            { dx: 0, dy: -1 }, // вверх
-            { dx: 1, dy: 0 },  // вправо
-            { dx: 0, dy: 1 },  // вниз
-            { dx: -1, dy: 0 }  // влево
+            {dx: 0, dy: -1}, // вверх
+            {dx: 1, dy: 0},  // вправо
+            {dx: 0, dy: 1},  // вниз
+            {dx: -1, dy: 0},  // влево
         ];
-
-
-
 
 
         //Движение противников
         let bestDirections = null;
         let bestDistance = Infinity;
+        let sortedDirections = [];
 
-        for(let dir of directions) {
+        for (let dir of directions) {
             const newX = enemy.x + dir.dx;
             const newY = enemy.y + dir.dy;
 
@@ -351,29 +348,36 @@ function  moveEnemys() {
             //     break;
             // }
 
-            if(isCellFree(newX, newY) && (newX !== person.x && newY !== person.y)) {
+            if (isCellFree(newX, newY) || (newX !== person.x && newY !== person.y)) {
                 const dist = Math.pow(newX - person.x, 2) + Math.pow(newY - person.y, 2)
-                if(dist < bestDistance) {
+                if (dist < bestDistance) {
+                    sortedDirections.push(dir);
                     bestDistance = dist
                     bestDirections = dir
                 }
             }
         }
 
-        if (chekAttakRadiuse(enemy, person)) {
-            person.health -= enemy.attack;
-            console.log(person.health);
-        }else if(bestDirections){
-                const nx = enemy.x + bestDirections.dx;
-                const ny = enemy.y + bestDirections.dy;
+        // sortedDirections = sortedDirections.sort((a, b) => b - a);
 
-                // if (isCellFree(nx, ny)) {
-                //     enemy.x = nx;
-                //     enemy.y = ny;
-                // }
 
-            enemy.x = nx;
-            enemy.y = ny;
+
+
+            if (chekAttakRadiuse(enemy, person)) {
+                person.health -= enemy.attack;
+                console.log(person.health);
+            } else {
+                for (let i = sortedDirections.length - 1; i >= 0; i--) {
+                    const nx = enemy.x + sortedDirections[i].dx;
+                    const ny = enemy.y + sortedDirections[i].dy;
+                    if (isCellFree(nx, ny)) {
+                        enemy.x = nx;
+                        enemy.y = ny;
+                        break;
+                    }
+                }
+                // enemy.x = nx;
+                // enemy.y = ny;
             }
 
 
@@ -387,7 +391,7 @@ function  moveEnemys() {
 function gameLoop() {
     // Очистка экрана
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if(person.health <= 0) {
+    if (person.health <= 0) {
         alert("Вы погибли")
         return;
     }
@@ -455,7 +459,7 @@ document.addEventListener('keydown', (e) => {
     let newY = person.y;
     // console.log(e.key);
 
-    switch (e.key){
+    switch (e.key) {
         case "w":
             newY--;
             break;
@@ -474,26 +478,24 @@ document.addEventListener('keydown', (e) => {
     }
 
 
-
     let enemyIndex = -1;
     for (let i = 0; i < enemys.length; i++) {
-        if(enemys[i].x === newX && enemys[i].y === newY) {
+        if (enemys[i].x === newX && enemys[i].y === newY) {
             enemyIndex = i;
             break;
         }
     }
 
-    if(enemyIndex !== -1){
+    if (enemyIndex !== -1) {
         enemys[enemyIndex].health -= person.attack;
+        moveEnemys();
 
-    }else if(isCellFree(newX,newY)){
+    } else if (isCellFree(newX, newY)) {
         person.x = newX;
         person.y = newY;
 
-        moveEnemys()
+        moveEnemys();
     }
-
-
 
 
 })
