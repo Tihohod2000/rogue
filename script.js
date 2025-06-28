@@ -107,7 +107,7 @@ function isCellFree(x, y) {
     if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) return false;
     if (map[y][x] === 1) return false;
 
-    // Проверка на монстров
+    // Проверка
     for (let enemy of enemys) {
         if (enemy.x === x && enemy.y === y) {
             return false;
@@ -178,14 +178,25 @@ function generateRooms() {
             startY--;
         }
 
-        //Сделать проверку что комната будет достяжимой
+        //Сделать проверку что комната будет доступной
         let roomReachability = false;
 
+        let border;
+
         exitLoopPoint: for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
-            for (let x = startX; x < (startX + randomSizeWidthOfRooms); x++) {
+            if(y === startY || y === startY + randomSizeHeightOfRooms - 1) {
+                border = 1;
+            }else{
+                border = startX + randomSizeWidthOfRooms - 1;
+            }
+
+            for (let x = startX; x < (startX + randomSizeWidthOfRooms); x += border ) {
+
                 if (
-                    (y + 1 >= map.length || map[y + 1][x] !== 1) ||
-                    (x + 1 >= map[y].length || map[y][x + 1] !== 1)
+                    map[y + 1][x] !== 1 ||
+                    map[y][x+1] !== 1 ||
+                    map[y-1][x] !== 1 ||
+                    map[y][x-1] !== 1
                 ) {
                     roomReachability = true;
                     break exitLoopPoint;
@@ -284,6 +295,34 @@ function drawEnemys() {
     })
 }
 
+function chekAttakRadiuse(from, to){
+    const radiuse = [
+        { dx: 0, dy: -1 }, // вверх
+        { dx: 1, dy: 0 },  // вправо
+        { dx: 0, dy: 1 },  // вниз
+        { dx: -1, dy: 0 },  // влево
+        { dx: 1, dy: -1 },  // вверх-вправо
+        { dx: 1, dy: 1 },  // вниз-вправо
+        { dx: -1, dy: 1 },  // вниз-влево
+        { dx: -1, dy: -1 }  // вверх-влево
+    ];
+
+
+
+    let attack = false;
+
+    for(let rad of radiuse) {
+        const newX = from.x + rad.dx;
+        const newY = from.y + rad.dy;
+
+
+        if(newX === to.x && newY === to.y) {
+            attack = true;
+        }
+    }
+
+    return attack;
+}
 
 function  moveEnemys() {
     enemys.forEach(enemy => {
@@ -295,6 +334,9 @@ function  moveEnemys() {
         ];
 
 
+
+
+
         //Движение противников
         let bestDirections = null;
         let bestDistance = Infinity;
@@ -303,29 +345,40 @@ function  moveEnemys() {
             const newX = enemy.x + dir.dx;
             const newY = enemy.y + dir.dy;
 
-            if(isCellFree(newX, newY) || (newX === person.x && newY === person.y)) {
+            // if(newX === person.x && newY === person.y) {
+            //     bestDirections = null;
+            //     bestDistance = Infinity;
+            //     break;
+            // }
+
+            if(isCellFree(newX, newY) && (newX !== person.x && newY !== person.y)) {
                 const dist = Math.pow(newX - person.x, 2) + Math.pow(newY - person.y, 2)
                 if(dist < bestDistance) {
                     bestDistance = dist
                     bestDirections = dir
                 }
             }
+        }
 
-            if(bestDirections){
+        if (chekAttakRadiuse(enemy, person)) {
+            person.health -= enemy.attack;
+            console.log(person.health);
+        }else if(bestDirections){
                 const nx = enemy.x + bestDirections.dx;
                 const ny = enemy.y + bestDirections.dy;
 
-                if (nx === person.x && ny === person.y) {
-                    // player.health -= monster.attack;
-                    // console.log(`Игрок атакован! Здоровье: ${player.health}`);
-                } else if (isCellFree(nx, ny)) {
-                    enemy.x = nx;
-                    enemy.y = ny;
-                }
+                // if (isCellFree(nx, ny)) {
+                //     enemy.x = nx;
+                //     enemy.y = ny;
+                // }
 
+            enemy.x = nx;
+            enemy.y = ny;
             }
 
-        }
+
+
+
     })
 
     enemys.filter(e => e.health > 0);
@@ -334,6 +387,10 @@ function  moveEnemys() {
 function gameLoop() {
     // Очистка экрана
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if(person.health <= 0) {
+        alert("Вы погибли")
+        return;
+    }
 
     // Отрисовка
     drawMap();
@@ -396,6 +453,7 @@ Promise.all([
 document.addEventListener('keydown', (e) => {
     let newX = person.x;
     let newY = person.y;
+    // console.log(e.key);
 
     switch (e.key){
         case "w":
@@ -410,12 +468,15 @@ document.addEventListener('keydown', (e) => {
         case "d":
             newX++;
             break;
+        case " ":
+            console.log("jhsrdbgfjbdfj");
+            break;
     }
 
 
 
     let enemyIndex = -1;
-    for (let i = 0; i < enemys; i++) {
+    for (let i = 0; i < enemys.length; i++) {
         if(enemys[i].x === newX && enemys[i].y === newY) {
             enemyIndex = i;
             break;
