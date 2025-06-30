@@ -95,8 +95,8 @@ function generateEnemy() {
         enemys.push({
             x: position.x,
             y: position.y,
-            health: 30,
-            attack: 5,
+            health: 100,
+            attack: 3,
         });
 
 
@@ -173,10 +173,10 @@ function generateRooms() {
             Math.floor(Math.random() * (SizeOfRoom[1] - SizeOfRoom[0] + 1)) + 3;
 
         //Проверка что комната при создании не выйдет за карту
-        while (startX + randomSizeWidthOfRooms > map[0].length-1) {
+        while (startX + randomSizeWidthOfRooms > map[0].length - 1) {
             startX--;
         }
-        while (startY + randomSizeHeightOfRooms > map.length-1) {
+        while (startY + randomSizeHeightOfRooms > map.length - 1) {
             startY--;
         }
 
@@ -192,7 +192,7 @@ function generateRooms() {
                 border = startX + randomSizeWidthOfRooms - 1;
             }
 
-            for (let x = startX; x < (startX + randomSizeWidthOfRooms - 1) ; x += border) {
+            for (let x = startX; x < (startX + randomSizeWidthOfRooms - 1); x += border) {
 
                 if (
                     map[y + 1][x] !== 1 ||
@@ -272,13 +272,21 @@ function drawPotions() {
 
 function drawPerson() {
     let img = textures.person;
+
     ctx.drawImage(
         img,
         person.x * cellWidth,
         person.y * cellHeight,
         cellWidth,
         cellHeight
-    )
+    );
+
+    ctx.strokeStyle = 'rgb(27,248,27)';
+    ctx.beginPath();
+    ctx.moveTo(person.x * cellWidth, person.y * cellHeight);
+    ctx.lineTo(person.x * cellWidth + ((cellWidth * person.health) / 100), person.y * cellHeight)
+    ctx.lineWidth = 3;
+    ctx.stroke();
 }
 
 //Отрисовка монстров
@@ -291,7 +299,16 @@ function drawEnemys() {
             enemy.y * cellHeight,
             cellWidth,
             cellHeight
-        )
+        );
+
+        ctx.strokeStyle = "red";
+        ctx.beginPath();
+        ctx.moveTo(enemy.x * cellWidth, enemy.y * cellHeight);
+        ctx.lineTo(enemy.x * cellWidth + ((cellWidth * enemy.health) / 100), enemy.y * cellHeight)
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+
     })
 }
 
@@ -361,31 +378,27 @@ function moveEnemys() {
         // sortedDirections = sortedDirections.sort((a, b) => b - a);
 
 
-
-
-            if (chekAttakRadiuse(enemy, person)) {
-                person.health -= enemy.attack;
-                console.log(person.health);
-            } else {
-                for (let i = sortedDirections.length - 1; i >= 0; i--) {
-                    const nx = enemy.x + sortedDirections[i].dx;
-                    const ny = enemy.y + sortedDirections[i].dy;
-                    if (isCellFree(nx, ny)) {
-                        enemy.x = nx;
-                        enemy.y = ny;
-                        break;
-                    }
+        if (chekAttakRadiuse(enemy, person)) {
+            person.health -= enemy.attack;
+            console.log(person.health);
+        } else {
+            for (let i = sortedDirections.length - 1; i >= 0; i--) {
+                const nx = enemy.x + sortedDirections[i].dx;
+                const ny = enemy.y + sortedDirections[i].dy;
+                if (isCellFree(nx, ny)) {
+                    enemy.x = nx;
+                    enemy.y = ny;
+                    break;
                 }
-                // enemy.x = nx;
-                // enemy.y = ny;
             }
-
-
+            // enemy.x = nx;
+            // enemy.y = ny;
+        }
 
 
     })
 
-    enemys.filter(e => e.health > 0);
+    enemys = enemys.filter(e => e.health > 0);
 }
 
 function gameLoop() {
@@ -396,12 +409,17 @@ function gameLoop() {
         return;
     }
 
+    if(enemys.length <= 0) {
+        alert("Вы уничтожили всех врагов")
+        return;
+    }
+
     // Отрисовка
     drawMap();
     drawSwords();
     drawPotions();
-    drawPerson()
     drawEnemys();
+    drawPerson();
     // drawPlayer();
 
     // Информация о здоровье
@@ -457,7 +475,6 @@ Promise.all([
 document.addEventListener('keydown', (e) => {
     let newX = person.x;
     let newY = person.y;
-    // console.log(e.key);
 
     switch (e.key) {
         case "w":
@@ -473,29 +490,40 @@ document.addEventListener('keydown', (e) => {
             newX++;
             break;
         case " ":
-            console.log("jhsrdbgfjbdfj");
+            for (let i = 0; i < enemys.length; i++) {
+                if (chekAttakRadiuse(person, enemys[i])) {
+                    enemys[i].health -= person.attack;
+                }
+            }
             break;
     }
 
 
-    let enemyIndex = -1;
-    for (let i = 0; i < enemys.length; i++) {
-        if (enemys[i].x === newX && enemys[i].y === newY) {
-            enemyIndex = i;
-            break;
+    if (isCellFree(newX, newY)) {
+        person.x = newX;
+        person.y = newY;
+        for (let i = 0; i < potions.length; i++) {
+            if(
+                potions[i].x === person.x &&
+                potions[i].y === person.y
+            ){
+                person.health += 30;
+                if(person.health > 100) person.health = 100;
+                potions.splice(i, 1);
+            }
+        }
+        for (let i = 0; i < swords.length; i++) {
+            if(
+                swords[i].x === person.x &&
+                swords[i].y === person.y
+            ){
+                person.attack += 30;
+                swords.splice(i, 1);
+            }
         }
     }
 
-    if (enemyIndex !== -1) {
-        enemys[enemyIndex].health -= person.attack;
-        moveEnemys();
-
-    } else if (isCellFree(newX, newY)) {
-        person.x = newX;
-        person.y = newY;
-
-        moveEnemys();
-    }
+    moveEnemys();
 
 
 })
