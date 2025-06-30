@@ -4,7 +4,7 @@ const ctx = canvas.getContext("2d");
 const mapWidth = 40;
 const mapHeight = 24;
 
-const cellSize = 20;
+// const cellSize = 20;
 const cellWidth = canvas.width / 40;
 const cellHeight = canvas.height / 24;
 
@@ -30,7 +30,6 @@ generatePerson()
 generateItem()
 generateEnemy()
 
-// console.log(map)
 
 function generateItem() {
 
@@ -51,10 +50,6 @@ function generateItem() {
             type: "attach"
         });
     }
-
-
-    // console.log(person);
-
 }
 
 
@@ -98,11 +93,8 @@ function generateEnemy() {
             health: 100,
             attack: 3,
         });
-
-
     }
     console.log(enemys);
-
 }
 
 function isCellFree(x, y) {
@@ -152,8 +144,6 @@ function generateHallways() {
         } else {
             i--;
         }
-
-
     }
 }
 
@@ -186,12 +176,16 @@ function generateRooms() {
         let border;
 
         exitLoopPoint: for (let y = startY; y < (startY + randomSizeHeightOfRooms); y++) {
+
+            //Вычисляем отступ чтобы в следующем for-цикле проверять только периметр комнаты
             if (y === startY || y === startY + randomSizeHeightOfRooms - 1) {
                 border = 1;
             } else {
                 border = startX + randomSizeWidthOfRooms - 1;
             }
 
+
+            //Проверяем что клетка доступна
             for (let x = startX; x < (startX + randomSizeWidthOfRooms - 1); x += border) {
 
                 if (
@@ -282,9 +276,13 @@ function drawPerson() {
     );
 
     ctx.strokeStyle = 'rgb(27,248,27)';
+    drawHealth(person)
+}
+
+function drawHealth(obj) {
     ctx.beginPath();
-    ctx.moveTo(person.x * cellWidth, person.y * cellHeight);
-    ctx.lineTo(person.x * cellWidth + ((cellWidth * person.health) / 100), person.y * cellHeight)
+    ctx.moveTo(obj.x * cellWidth, obj.y * cellHeight);
+    ctx.lineTo(obj.x * cellWidth + ((cellWidth * obj.health) / 100), obj.y * cellHeight)
     ctx.lineWidth = 3;
     ctx.stroke();
 }
@@ -301,12 +299,13 @@ function drawEnemys() {
             cellHeight
         );
 
-        ctx.strokeStyle = "red";
-        ctx.beginPath();
-        ctx.moveTo(enemy.x * cellWidth, enemy.y * cellHeight);
-        ctx.lineTo(enemy.x * cellWidth + ((cellWidth * enemy.health) / 100), enemy.y * cellHeight)
-        ctx.lineWidth = 3;
-        ctx.stroke();
+        ctx.strokeStyle = 'rgb(255,0,0)';
+        drawHealth(enemy);
+        // ctx.beginPath();
+        // ctx.moveTo(enemy.x * cellWidth, enemy.y * cellHeight);
+        // ctx.lineTo(enemy.x * cellWidth + ((cellWidth * enemy.health) / 100), enemy.y * cellHeight)
+        // ctx.lineWidth = 3;
+        // ctx.stroke();
 
 
     })
@@ -359,12 +358,6 @@ function moveEnemys() {
             const newX = enemy.x + dir.dx;
             const newY = enemy.y + dir.dy;
 
-            // if(newX === person.x && newY === person.y) {
-            //     bestDirections = null;
-            //     bestDistance = Infinity;
-            //     break;
-            // }
-
             if (isCellFree(newX, newY) || (newX !== person.x && newY !== person.y)) {
                 const dist = Math.pow(newX - person.x, 2) + Math.pow(newY - person.y, 2)
                 if (dist < bestDistance) {
@@ -374,9 +367,6 @@ function moveEnemys() {
                 }
             }
         }
-
-        // sortedDirections = sortedDirections.sort((a, b) => b - a);
-
 
         if (chekAttakRadiuse(enemy, person)) {
             person.health -= enemy.attack;
@@ -391,11 +381,7 @@ function moveEnemys() {
                     break;
                 }
             }
-            // enemy.x = nx;
-            // enemy.y = ny;
         }
-
-
     })
 
     enemys = enemys.filter(e => e.health > 0);
@@ -409,7 +395,7 @@ function gameLoop() {
         return;
     }
 
-    if(enemys.length <= 0) {
+    if (enemys.length <= 0) {
         alert("Вы уничтожили всех врагов")
         return;
     }
@@ -503,20 +489,20 @@ document.addEventListener('keydown', (e) => {
         person.x = newX;
         person.y = newY;
         for (let i = 0; i < potions.length; i++) {
-            if(
+            if (
                 potions[i].x === person.x &&
                 potions[i].y === person.y
-            ){
+            ) {
                 person.health += 30;
-                if(person.health > 100) person.health = 100;
+                if (person.health > 100) person.health = 100;
                 potions.splice(i, 1);
             }
         }
         for (let i = 0; i < swords.length; i++) {
-            if(
+            if (
                 swords[i].x === person.x &&
                 swords[i].y === person.y
-            ){
+            ) {
                 person.attack += 30;
                 swords.splice(i, 1);
             }
