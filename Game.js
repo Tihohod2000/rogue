@@ -1,12 +1,11 @@
-export class  Game {
-    init(){
+export class Game {
+    init() {
         const canvas = document.getElementById("gameCanvas")
         const ctx = canvas.getContext("2d");
 
         const MAP_WIDTH = 40;
         const MAP_HEIGHT = 24;
 
-// const cellSize = 20;
         const cellWidth = canvas.width / 40;
         const cellHeight = canvas.height / 24;
 
@@ -18,6 +17,14 @@ export class  Game {
         const COUNT_OF_ENEMY = 10;
         const COUNT_OF_POTION = 10;
         const COUNT_OF_SWORD = 2;
+
+        const radiuse = [
+            {dx: 0, dy: -1}, // вверх
+            {dx: 1, dy: 0},  // вправо
+            {dx: 0, dy: 1},  // вниз
+            {dx: -1, dy: 0},  // влево
+        ];
+
         let enemys = [];
         let potions = [];
         let swords = [];
@@ -115,11 +122,8 @@ export class  Game {
 
 
         function generateHallways() {
-            let randomCountOfHallwaysHorizontally =
-                Math.floor(Math.random() * (COUNT_OF_HOLLWAYS[1] - COUNT_OF_HOLLWAYS[0] + 1)) + 3;
-            let randomCountOfHallwaysVertically =
-                Math.floor(Math.random() * (COUNT_OF_HOLLWAYS[1] - COUNT_OF_HOLLWAYS[0] + 1)) + 3;
-
+            let randomCountOfHallwaysHorizontally = randomCountFromInterval(COUNT_OF_HOLLWAYS);
+            let randomCountOfHallwaysVertically = randomCountFromInterval(COUNT_OF_HOLLWAYS);
             //Добавление горизонтальных коридоров
             for (let i = 0; i < randomCountOfHallwaysHorizontally; i++) {
                 let y = Math.floor(Math.random() * (MAP_HEIGHT - 1) + 1);
@@ -137,8 +141,6 @@ export class  Game {
             for (let i = 0; i < randomCountOfHallwaysVertically; i++) {
                 let x = Math.floor(Math.random() * (MAP_WIDTH - 1) + 1);
                 let structure = map[0][x];
-                // console.log(structure.structure)
-                // console.log(structure)
                 if (structure === 0) {
                     i--;
                 } else if (x < map[0].length) {
@@ -149,20 +151,20 @@ export class  Game {
             }
         }
 
+        function randomCountFromInterval(interval) {
+            return Math.floor(Math.random() * (interval[1] - interval[0] + 1)) + interval[0];
+        }
 
         function generateRooms() {
-            let randomCountOfRooms =
-                Math.floor(Math.random() * (COUNT_OF_ROOMS[1] - COUNT_OF_ROOMS[0] + 1)) + 5;
-
+            let randomCountOfRooms = randomCountFromInterval(COUNT_OF_ROOMS);
 
             for (let i = 0; i < randomCountOfRooms; i++) {
                 let startX = Math.floor(Math.random() * MAP_WIDTH + 1);
                 let startY = Math.floor(Math.random() * MAP_HEIGHT + 1);
 
-                let randomSizeWidthOfRooms =
-                    Math.floor(Math.random() * (SIZE_OF_ROOM[1] - SIZE_OF_ROOM[0] + 1)) + 3;
-                let randomSizeHeightOfRooms =
-                    Math.floor(Math.random() * (SIZE_OF_ROOM[1] - SIZE_OF_ROOM[0] + 1)) + 3;
+
+                let randomSizeWidthOfRooms = randomCountFromInterval(SIZE_OF_ROOM);
+                let randomSizeHeightOfRooms = randomCountFromInterval(SIZE_OF_ROOM);
 
                 //Проверка что комната при создании не выйдет за карту
                 while (startX + randomSizeWidthOfRooms > map[0].length - 1) {
@@ -187,7 +189,7 @@ export class  Game {
                     }
 
 
-                    //Проверяем что клетка доступна
+                    //Проверяем что клетка комнаты доступна (является проходом в комнату)
                     for (let x = startX; x < (startX + randomSizeWidthOfRooms - 1); x += border) {
 
                         if (
@@ -219,7 +221,19 @@ export class  Game {
         }
 
 
-// Отрисовка карты
+
+        //Отрисовка картинки объекта(враг, персонаж, меч, зелье)
+        function draw(img, obj) {
+            ctx.drawImage(
+                img,
+                obj.x * cellWidth,
+                obj.y * cellHeight,
+                cellWidth,
+                cellHeight
+            )
+        }
+
+        // Отрисовка карты
         function drawMap() {
             for (let y = 0; y < MAP_HEIGHT; y++) {
                 for (let x = 0; x < MAP_WIDTH; x++) {
@@ -243,45 +257,25 @@ export class  Game {
         function drawSwords() {
             let img = textures.sword;
             swords.forEach(sword => {
-                ctx.drawImage(
-                    img,
-                    sword.x * cellWidth,
-                    sword.y * cellHeight,
-                    cellWidth,
-                    cellHeight
-                )
+                draw(img, sword);
             })
         }
 
         function drawPotions() {
             let img = textures.potion;
             potions.forEach(potion => {
-                ctx.drawImage(
-                    img,
-                    potion.x * cellWidth,
-                    potion.y * cellHeight,
-                    cellWidth,
-                    cellHeight
-                )
+                draw(img, potion);
             })
         }
 
         function drawPerson() {
             let img = textures.person;
-
-            ctx.drawImage(
-                img,
-                person.x * cellWidth,
-                person.y * cellHeight,
-                cellWidth,
-                cellHeight
-            );
-
-            ctx.strokeStyle = 'rgb(27,248,27)';
-            drawHealth(person)
+            draw(img, person);
+            drawHealth(person, 'rgb(27,248,27)')
         }
 
-        function drawHealth(obj) {
+        function drawHealth(obj, color) {
+            ctx.strokeStyle = color;
             ctx.beginPath();
             ctx.moveTo(obj.x * cellWidth, obj.y * cellHeight);
             ctx.lineTo(obj.x * cellWidth + ((cellWidth * obj.health) / 100), obj.y * cellHeight)
@@ -289,49 +283,20 @@ export class  Game {
             ctx.stroke();
         }
 
-//Отрисовка монстров
         function drawEnemys() {
             let img = textures.enemy;
             enemys.forEach(enemy => {
-                ctx.drawImage(
-                    img,
-                    enemy.x * cellWidth,
-                    enemy.y * cellHeight,
-                    cellWidth,
-                    cellHeight
-                );
-
-                ctx.strokeStyle = 'rgb(255,0,0)';
-                drawHealth(enemy);
-                // ctx.beginPath();
-                // ctx.moveTo(enemy.x * cellWidth, enemy.y * cellHeight);
-                // ctx.lineTo(enemy.x * cellWidth + ((cellWidth * enemy.health) / 100), enemy.y * cellHeight)
-                // ctx.lineWidth = 3;
-                // ctx.stroke();
-
-
+                draw(img, enemy)
+                drawHealth(enemy, 'rgb(255,0,0)');
             })
         }
 
         function chekAttakRadiuse(from, to) {
-            const radiuse = [
-                {dx: 0, dy: -1}, // вверх
-                {dx: 1, dy: 0},  // вправо
-                {dx: 0, dy: 1},  // вниз
-                {dx: -1, dy: 0},  // влево
-                // { dx: 1, dy: -1 },  // вверх-вправо
-                // { dx: 1, dy: 1 },  // вниз-вправо
-                // { dx: -1, dy: 1 },  // вниз-влево
-                // { dx: -1, dy: -1 }  // вверх-влево
-            ];
-
-
             let attack = false;
 
             for (let rad of radiuse) {
                 const newX = from.x + rad.dx;
                 const newY = from.y + rad.dy;
-
 
                 if (newX === to.x && newY === to.y) {
                     attack = true;
@@ -343,18 +308,12 @@ export class  Game {
 
         function moveEnemys() {
             enemys.forEach(enemy => {
-                const directions = [
-                    {dx: 0, dy: -1}, // вверх
-                    {dx: 1, dy: 0},  // вправо
-                    {dx: 0, dy: 1},  // вниз
-                    {dx: -1, dy: 0},  // влево
-                ];
-
+                const directions = radiuse;
 
                 //Движение противников
                 let bestDirections = null;
                 let bestDistance = Infinity;
-                let sortedDirections = [];
+                let AllDirections = [];
 
                 for (let dir of directions) {
                     const newX = enemy.x + dir.dx;
@@ -363,7 +322,7 @@ export class  Game {
                     if (isCellFree(newX, newY) || (newX !== person.x && newY !== person.y)) {
                         const dist = Math.pow(newX - person.x, 2) + Math.pow(newY - person.y, 2)
                         if (dist < bestDistance) {
-                            sortedDirections.push(dir);
+                            AllDirections.push(dir);
                             bestDistance = dist
                             bestDirections = dir
                         }
@@ -374,9 +333,9 @@ export class  Game {
                     person.health -= enemy.attack;
                     console.log(person.health);
                 } else {
-                    for (let i = sortedDirections.length - 1; i >= 0; i--) {
-                        const nx = enemy.x + sortedDirections[i].dx;
-                        const ny = enemy.y + sortedDirections[i].dy;
+                    for (let i = AllDirections.length - 1; i >= 0; i--) {
+                        const nx = enemy.x + AllDirections[i].dx;
+                        const ny = enemy.y + AllDirections[i].dy;
                         if (isCellFree(nx, ny)) {
                             enemy.x = nx;
                             enemy.y = ny;
@@ -389,15 +348,19 @@ export class  Game {
             enemys = enemys.filter(e => e.health > 0);
         }
 
-        function reloadGame(){
+        function reloadGame() {
             let exitGame = confirm("Хотите начать заново?");
 
-            if(exitGame){
+            if (exitGame) {
                 document.location.reload();
             }
         }
 
         function gameLoop() {
+
+            // Очистка экрана
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             if (person.health <= 0) {
                 alert("Вы погибли")
                 reloadGame();
@@ -410,17 +373,12 @@ export class  Game {
                 return;
             }
 
-            // Очистка экрана
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-
             // Отрисовка
             drawMap();
             drawSwords();
             drawPotions();
             drawEnemys();
             drawPerson();
-
 
             requestAnimationFrame(gameLoop);
         }
@@ -516,7 +474,6 @@ export class  Game {
             }
 
             moveEnemys();
-
 
         })
 
