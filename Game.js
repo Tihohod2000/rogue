@@ -426,7 +426,9 @@ export class Game {
             let newX = person.x;
             let newY = person.y;
 
-            switch (e.key) {
+            let key = e.key.toLowerCase();
+
+            switch (key) {
                 case "w":
                     newY--;
                     break;
@@ -437,6 +439,18 @@ export class Game {
                     newX--;
                     break;
                 case "d":
+                    newX++;
+                    break;
+                case "ц":
+                    newY--;
+                    break;
+                case "ы":
+                    newY++;
+                    break;
+                case "ф":
+                    newX--;
+                    break;
+                case "в":
                     newX++;
                     break;
                 case " ":
