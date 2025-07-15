@@ -91,6 +91,11 @@ class Game {
             return {x, y};
         }
 
+        let animationTime = 0;
+
+
+
+
         function generateEnemy() {
 
             for (let i = 0; i < COUNT_OF_ENEMY; i++) {
@@ -99,6 +104,9 @@ class Game {
                 enemys.push({
                     x: position.x,
                     y: position.y,
+                    baseX: position.x, // Запоминаем базовую позицию для колебания
+                    baseY: position.y,
+                    animOffset: Math.random() * Math.PI * 2,
                     health: 100,
                     attack: 3,
                 });
@@ -284,11 +292,26 @@ class Game {
 
         function drawEnemys() {
             let img = textures.enemy;
+
             enemys.forEach(enemy => {
-                draw(img, enemy)
-                drawHealth(enemy, 'rgb(255,0,0)');
-            })
+                const offsetX = Math.sin(animationTime + (enemy.animOffset || 0)) * 0.03;
+                const offsetY = Math.cos(animationTime + (enemy.animOffset || 0)) * 0.03;
+
+                // Рисуем врага с временным смещением
+                draw(img, {
+                    ...enemy,
+                    x: enemy.x + offsetX,
+                    y: enemy.y + offsetY
+                });
+
+                drawHealth({
+                    ...enemy,
+                    x: enemy.x + offsetX,
+                    y: enemy.y + offsetY
+                }, 'rgb(255,0,0)');
+            });
         }
+
 
         function chekAttakRadiuse(from, to) {
             let attack = false;
@@ -371,6 +394,8 @@ class Game {
                 reloadGame();
                 return;
             }
+
+            animationTime += 0.05; // Увеличиваем таймер (скорость анимации)
 
             // Отрисовка
             drawMap();
