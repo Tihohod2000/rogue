@@ -221,7 +221,6 @@ class Game {
         }
 
 
-
         //Отрисовка картинки объекта(враг, персонаж, меч, зелье)
         function draw(img, obj) {
             ctx.drawImage(
@@ -454,42 +453,107 @@ class Game {
                     newX++;
                     break;
                 case " ":
-                    for (let i = 0; i < enemys.length; i++) {
-                        if (chekAttakRadiuse(person, enemys[i])) {
-                            enemys[i].health -= person.attack;
-                        }
-                    }
+                    attakToEnemys();
                     break;
             }
-
 
             if (isCellFree(newX, newY)) {
                 person.x = newX;
                 person.y = newY;
-                for (let i = 0; i < potions.length; i++) {
-                    if (
-                        potions[i].x === person.x &&
-                        potions[i].y === person.y
-                    ) {
-                        person.health += 30;
-                        if (person.health > 100) person.health = 100;
-                        potions.splice(i, 1);
+            }
+
+            addedItem();
+            moveEnemys();
+
+        })
+
+        function attakToEnemys() {
+            for (let i = 0; i < enemys.length; i++) {
+                if (chekAttakRadiuse(person, enemys[i])) {
+                    enemys[i].health -= person.attack;
+                }
+            }
+        }
+
+        function addedItem() {
+
+            for (let i = 0; i < potions.length; i++) {
+                if (
+                    potions[i].x === person.x &&
+                    potions[i].y === person.y
+                ) {
+                    person.health += 30;
+                    if (person.health > 100) person.health = 100;
+                    potions.splice(i, 1);
+                }
+            }
+            for (let i = 0; i < swords.length; i++) {
+                if (
+                    swords[i].x === person.x &&
+                    swords[i].y === person.y
+                ) {
+                    person.attack += 30;
+                    swords.splice(i, 1);
+                }
+            }
+        }
+
+
+
+//------------------------------------------------------------
+        let startX = 0;
+        let startY = 0;
+        const threshold = 50; // минимальное расстояние для свайпа
+
+        const swipeArea = document.getElementById('gameCanvas');
+
+        swipeArea.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        });
+
+        swipeArea.addEventListener('touchend', (e) => {
+
+            let newX = person.x;
+            let newY = person.y;
+
+            const touch = e.changedTouches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (Math.abs(dx) > threshold) {
+                    if (dx > 0) {
+                        newX++;
+                        console.log('Свайп вправо');
+                    } else {
+                        newX--;
+                        console.log('Свайп влево');
                     }
                 }
-                for (let i = 0; i < swords.length; i++) {
-                    if (
-                        swords[i].x === person.x &&
-                        swords[i].y === person.y
-                    ) {
-                        person.attack += 30;
-                        swords.splice(i, 1);
+            } else {
+                if (Math.abs(dy) > threshold) {
+                    if (dy > 0) {
+                        newY++;
+                        console.log('Свайп вниз');
+                    } else {
+                        newY--;
+                        console.log('Свайп вверх');
                     }
                 }
             }
 
+            if (isCellFree(newX, newY)) {
+                person.x = newX;
+                person.y = newY;
+            }
+
+            addedItem();
             moveEnemys();
 
-        })
+
+        });
 
     }
 }
