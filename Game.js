@@ -515,45 +515,54 @@ class Game {
 
         swipeArea.addEventListener('touchend', (e) => {
 
-            let newX = person.x;
-            let newY = person.y;
+            if(isMobileDevice()){
 
-            const touch = e.changedTouches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
+                let newX = person.x;
+                let newY = person.y;
 
-            if (Math.abs(dx) > Math.abs(dy)) {
-                if (Math.abs(dx) > threshold) {
-                    if (dx > 0) {
-                        newX++;
-                        console.log('Свайп вправо');
-                    } else {
-                        newX--;
-                        console.log('Свайп влево');
+                const touch = e.changedTouches[0];
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (Math.abs(dx) > threshold) {
+                        if (dx > 0) {
+                            newX++;
+                            console.log('Свайп вправо');
+                        } else {
+                            newX--;
+                            console.log('Свайп влево');
+                        }
+                    }
+                } else {
+                    if (Math.abs(dy) > threshold) {
+                        if (dy > 0) {
+                            newY++;
+                            console.log('Свайп вниз');
+                        } else {
+                            newY--;
+                            console.log('Свайп вверх');
+                        }
                     }
                 }
-            } else {
-                if (Math.abs(dy) > threshold) {
-                    if (dy > 0) {
-                        newY++;
-                        console.log('Свайп вниз');
-                    } else {
-                        newY--;
-                        console.log('Свайп вверх');
-                    }
+
+                if (isCellFree(newX, newY)) {
+                    person.x = newX;
+                    person.y = newY;
                 }
+
+                attakToEnemys();
+
+                addedItem();
+                moveEnemys();
+
             }
-
-            if (isCellFree(newX, newY)) {
-                person.x = newX;
-                person.y = newY;
-            }
-
-            addedItem();
-            moveEnemys();
-
 
         });
+
+        function isMobileDevice() {
+            return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
 
     }
 }
